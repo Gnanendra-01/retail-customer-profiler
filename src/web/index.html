@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Customer Multi-Segment Profiler & High-Value Classifier</title>
+    <!-- Fonts & Chart.js -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+        <div class="logo-container">
+            <div class="logo-icon">🛍️</div>
+            <div>
+                <h1 class="logo-title">Retail Analytics Engine</h1>
+                <p class="logo-subtitle">UG Level 2 — Mall Customers Analytics & Segmentation</p>
+            </div>
+        </div>
+        <nav class="nav-tabs">
+            <button class="nav-btn active" data-tab="tab-dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-tab="tab-clustering">🎯 Persona Profiler</button>
+            <button class="nav-btn" data-tab="tab-classifier">⚡ Live Classifier</button>
+            <button class="nav-btn" data-tab="tab-personas">👥 Segment Personas</button>
+        </nav>
+    </header>
+
+    <main class="app-content">
+        <!-- TAB 1: EXECUTIVE DASHBOARD -->
+        <section id="tab-dashboard" class="tab-pane active">
+            <div class="dashboard-hero">
+                <div class="hero-text">
+                    <h2>Retail Customer Multi-Segment Profiler & Classifier</h2>
+                    <p>Powered directly by <code>data/raw/Mall_Customers.csv</code> ($N = 200$ customer profiles). Combines Unsupervised K-Means Clustering and Supervised Random Forest Classification for data-driven customer intelligence.</p>
+                </div>
+                <div class="hero-badge">
+                    <span class="pulse-dot"></span> Mall Dataset Loaded (200 Records)
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-blue">👥</div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Total Customer Sample</span>
+                        <h3 class="kpi-value" id="kpi-total-cust">200</h3>
+                        <span class="kpi-sub">Mall Customers Dataset</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-green">💵</div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Avg Annual Income</span>
+                        <h3 class="kpi-value" id="kpi-avg-income">$60.56k</h3>
+                        <span class="kpi-sub" id="kpi-range-income">Min $15k • Max $137k</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-purple">🎯</div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Avg Spending Score</span>
+                        <h3 class="kpi-value" id="kpi-avg-spending">50.2 / 100</h3>
+                        <span class="kpi-sub" id="kpi-range-spending">Min 1 • Max 99</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-amber">⭐</div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">High-Value Share</span>
+                        <h3 class="kpi-value" id="kpi-highval-pct">27.0%</h3>
+                        <span class="kpi-sub" id="kpi-highval-count">54 High-Spenders (Score ≥ 70)</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon icon-cyan">🤖</div>
+                    <div class="kpi-data">
+                        <span class="kpi-label">Classifier Accuracy</span>
+                        <h3 class="kpi-value" id="kpi-classifier-acc">82.0%</h3>
+                        <span class="kpi-sub" id="kpi-classifier-auc">ROC-AUC: 0.9272</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Visualizations Grid -->
+            <div class="grid-2col">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h3>Customer Segment Share Distribution</h3>
+                        <span class="badge">Unsupervised K-Means (K=5)</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-segment-doughnut"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h3>Feature Importance for High-Value Classification</h3>
+                        <span class="badge badge-purple">Random Forest (No Leakage)</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-feature-importance"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: CLUSTERING & PERSONA PROFILER -->
+        <section id="tab-clustering" class="tab-pane">
+            <div class="section-title">
+                <h2>Unsupervised Customer Profiling (K-Means Clustering)</h2>
+                <p>Discovering customer segments using Annual Income (k$) and Spending Score (1-100) from Mall_Customers.csv.</p>
+            </div>
+
+            <div class="grid-2col">
+                <div class="glass-card flex-2">
+                    <div class="card-header">
+                        <h3>Customer Segment Scatter Plot (Actual Mall Dataset)</h3>
+                        <div class="controls-row">
+                            <label>X-Axis: </label>
+                            <select id="scatter-x" class="select-input">
+                                <option value="income">Annual Income (k$)</option>
+                                <option value="age">Age (Years)</option>
+                            </select>
+                            <label>Y-Axis: </label>
+                            <select id="scatter-y" class="select-input">
+                                <option value="spending">Spending Score (1-100)</option>
+                                <option value="income">Annual Income (k$)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container lg">
+                        <canvas id="chart-scatter-clusters"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-card flex-1">
+                    <div class="card-header">
+                        <h3>Optimal K Selection (Silhouette Curve)</h3>
+                        <span class="badge badge-green">Peak Silhouette = 0.5547 at K=5</span>
+                    </div>
+                    <p class="card-desc">Evaluated cluster numbers $K=2 \dots 8$. $K=5$ yields the highest cluster separation score on the Mall dataset.</p>
+                    <div class="chart-container">
+                        <canvas id="chart-elbow-curve"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radar Profile Comparison -->
+            <div class="glass-card margin-top-lg">
+                <div class="card-header">
+                    <h3>Multi-Dimensional Persona Profile Radar</h3>
+                    <p class="card-desc">Comparing Normalized Income, Spending Score, and Age across the 5 Discovered Customer Clusters</p>
+                </div>
+                <div class="chart-container lg">
+                    <canvas id="chart-persona-radar"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: LIVE HIGH-VALUE CUSTOMER CLASSIFIER -->
+        <section id="tab-classifier" class="tab-pane">
+            <div class="section-title">
+                <h2>Supervised High-Value Customer Predictor</h2>
+                <p>Input a customer's demographic parameters to predict their cluster persona and high-value status using trained ML models.</p>
+            </div>
+
+            <div class="grid-2col">
+                <!-- Interactive Form -->
+                <div class="glass-card">
+                    <h3 class="form-title">Customer Feature Inputs</h3>
+                    <form id="prediction-form" onsubmit="event.preventDefault(); evaluateCustomer();">
+                        <div class="form-group">
+                            <label for="inp-income">Annual Income (k$): <span id="val-income" class="form-val">85</span></label>
+                            <input type="range" id="inp-income" min="15" max="140" value="85" oninput="updateFormVal('income')">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inp-spending">Spending Score (1-100): <span id="val-spending" class="form-val">80</span></label>
+                            <input type="range" id="inp-spending" min="1" max="99" value="80" oninput="updateFormVal('spending')">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inp-age">Customer Age (Years): <span id="val-age" class="form-val">32</span></label>
+                            <input type="range" id="inp-age" min="18" max="70" value="32" oninput="updateFormVal('age')">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="inp-gender">Customer Gender:</label>
+                            <select id="inp-gender" class="select-input style-full" onchange="evaluateCustomer()">
+                                <option value="Female">Female</option>
+                                <option value="Male">Male</option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn-primary" onclick="evaluateCustomer()">🔮 Evaluate Customer Profile</button>
+                    </form>
+                </div>
+
+                <!-- Prediction Results Display -->
+                <div class="glass-card result-card">
+                    <h3 class="form-title">Classification & Persona Result</h3>
+                    
+                    <div class="prediction-box" id="pred-box">
+                        <div class="pred-header">
+                            <span class="pred-tag" id="pred-tag">High-Value Spender</span>
+                            <div class="pred-score" id="pred-score-text">88.5% High-Value Prob</div>
+                        </div>
+
+                        <div class="meter-bar-container">
+                            <div class="meter-bar-fill" id="pred-meter-fill" style="width: 88.5%;"></div>
+                        </div>
+
+                        <div class="result-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Assigned Cluster Persona:</span>
+                                <strong id="pred-persona-name" class="highlight-text">Cluster 1: High-Income High-Spenders</strong>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Demographic Features:</span>
+                                <span id="pred-demographics-text">Age 32 • Income $85k • Female</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Classification Target:</span>
+                                <span id="pred-target-text" class="tier-badge">Spending Score ≥ 70</span>
+                            </div>
+                        </div>
+
+                        <div class="strategy-box">
+                            <h4>🎯 Actionable Marketing Strategy</h4>
+                            <p id="pred-strategy-text">VIP concierge services, premium product previews, exclusive loyalty rewards.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: SEGMENT PERSONAS -->
+        <section id="tab-personas" class="tab-pane">
+            <div class="section-title">
+                <h2>Empirical Customer Segment Catalog</h2>
+                <p>Data-driven persona breakdown calculated directly from Mall_Customers.csv ($N = 200$).</p>
+            </div>
+
+            <div class="personas-grid" id="personas-cards-container">
+                <!-- Dynamically populated via JS -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>Retail Multi-Segment Profiler & High-Value Customer Classifier • Mall Customers Dataset ($N=200$)</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
